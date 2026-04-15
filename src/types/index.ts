@@ -41,19 +41,34 @@ export type ClientStatus = 'Prospect' | 'Active' | 'Churned' | 'ReturnCompleted'
 
 export interface Client {
   id: string;
-  name: string;
-  email: string;
-  phone: string;
+  name: string;           // Full name (TH)
+  nameEn?: string;        // Full name (EN)
+  nickname?: string;
+  email?: string;         // อีเมล
+  phone: string;          // เบอร์ติดต่อ
+  phoneAlt?: string;
   joinedDate: string;
   status: ClientStatus;
-  originLocationType: 'Home' | 'Condo';
 
+  // Social contacts
+  lineId?: string;
+  facebook?: string;
+  instagram?: string;
+  otherSocial?: string;
+
+  // Pickup/origin address (ที่อยู่)
+  originLocationType: 'Home' | 'Condo';
   originStreetAddress?: string;
-  originFloor?: string; // Added
+  originFloor?: string;        // ชั้น
+  hasElevator?: boolean;       // มีลิฟมั้ย
   originProvince?: string;
   originDistrict?: string;
   originSubDistrict?: string;
   originPostcode?: string;
+
+  // Service preferences
+  preferredPaymentCycle?: PaymentCycle;  // ชำระเงินแบบรายเดือนหรือรายปี
+  notes?: string;
 }
 
 export type BookingStatus = 'Pending' | 'Processing' | 'Pre-confirmed' | 'Confirmed' | 'InTransit' | 'AwaitingAllocation' | 'Completed' | 'Cancelled';
@@ -208,3 +223,134 @@ export interface PlatformActivity {
 }
 
 export type PlatformActivityType = 'Booking' | 'Client' | 'Branch' | 'Transaction' | 'Allocation' | 'User' | 'System';
+
+// ─── Order & Unit Management (Core Focus) ───────────────────────────────────
+
+/** Top-level service type the customer is requesting */
+export type ServiceType = 'Storage' | 'Delivery';
+
+/** Sub-type for Storage service */
+export type StorageSubType = 'DocumentBox' | 'StorageSpace';
+
+/** Sub-type for Delivery service */
+export type DeliverySubType = 'PickupAndStore' | 'ReturnDelivery' | 'MovingService';
+
+/** Billing cycle chosen by the customer */
+export type PaymentCycle = 'Monthly' | 'Annual';
+
+/** Physical unit type inside a branch */
+export type UnitType = 'DocumentBox' | 'StorageSpace';
+
+export type OrderStatus =
+  | 'Draft'
+  | 'Pending'
+  | 'Confirmed'
+  | 'Active'
+  | 'AwaitingReturn'
+  | 'Completed'
+  | 'Cancelled';
+
+/** Unified Order — covers both Storage and Delivery orders */
+export interface Order {
+  id: string;
+  serviceType: ServiceType;
+  storageSubType?: StorageSubType;
+  deliverySubType?: DeliverySubType;
+  status: OrderStatus;
+
+  // ── Customer info (ข้อมูลที่จำเป็น) ──────────────────────
+  clientId?: string;
+  clientName: string;           // ชื่อนามสกุล
+  clientPhone: string;          // เบอร์ติดต่อ
+  clientEmail?: string;         // อีเมล
+  clientLineId?: string;
+  clientFacebook?: string;
+
+  // ── Pickup/service address ────────────────────────────────
+  serviceAddress: string;       // ที่อยู่
+  serviceFloor?: string;        // ชั้น
+  hasElevator?: boolean;        // มีลิฟมั้ย
+
+  // ── What to store (ฝากอะไรบ้าง) ──────────────────────────
+  itemsDescription: string;
+  itemCategories?: string[];    // e.g. ['เอกสาร', 'เฟอร์นิเจอร์']
+
+  // ── Duration & quantity ───────────────────────────────────
+  serviceDate: string;          // วันเวลาที่ต้องการใช้
+  storageDuration?: string;     // ฝากนานแค่ไหน
+  storageEndDate?: string;
+  quantity?: number;            // ปริมาณของที่ต้องการฝาก
+  quantityUnit?: 'กล่อง' | 'ตร.ม.' | 'ชิ้น';
+
+  // ── Payment ────────────────────────────────────────────────
+  paymentCycle?: PaymentCycle;  // ชำระเงินแบบรายเดือนหรือรายปี
+  monthlyRate?: number;
+  firstMonthTotal?: number;
+  commissionRate?: number;      // 5–15% for agents/staff
+
+  // ── Assignment ─────────────────────────────────────────────
+  branchId?: string;
+  branchName?: string;
+  unitId?: string;
+  unitIdentifier?: string;
+
+  // ── e-Contract ─────────────────────────────────────────────
+  eContractStatus?: 'Draft' | 'Sent' | 'Signed';
+
+  // ── Staff ──────────────────────────────────────────────────
+  saleStaffId?: string;
+  saleStaffName?: string;
+  staffNotes?: string;
+
+  createdAt: string;
+  updatedAt?: string;
+}
+
+/** Enhanced Unit — replaces legacy Space, supports DocumentBox and StorageSpace */
+export interface Unit {
+  id: string;
+  branchId: string;
+  branchName: string;
+  unitIdentifier: string;       // e.g. 'BOX-A-001', 'SPC-B-002'
+  unitType: UnitType;
+  floor: number;
+  zone: string;                 // e.g. 'A', 'B', 'C', 'D'
+  status: 'Available' | 'Occupied' | 'Reserved' | 'Maintenance';
+
+  // For StorageSpace
+  widthM?: number;
+  lengthM?: number;
+  totalSqm?: number;
+
+  // For DocumentBox
+  boxCapacity?: number;        // max boxes in this slot
+
+  monthlyRate: number;
+  currentClientId?: string;
+  currentClientName?: string;
+  currentOrderId?: string;
+  billingCycleEndDate?: string;
+
+  // 2D floor plan positioning (grid units)
+  floorPlanX?: number;
+  floorPlanY?: number;
+  floorPlanW?: number;
+  floorPlanH?: number;
+
+  notes?: string;
+  createdAt: string;
+}
+
+/** Extended client fields for service intake */
+export interface ClientServiceInfo {
+  clientId: string;
+  // Required for service (ข้อมูลที่จำเป็นให้บริการลูกค้า)
+  hasElevator?: boolean;        // มีลิฟมั้ย
+  serviceFloor?: string;        // ชั้น
+  lineId?: string;
+  facebook?: string;
+  instagram?: string;
+  preferredContactMethod?: 'Phone' | 'Line' | 'Email';
+  paymentCycle?: PaymentCycle;
+  notes?: string;
+}

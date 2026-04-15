@@ -1,5 +1,5 @@
 
-import type { Branch, Space, Client, AllocatedBulkSpace, ClientStatus, BookingStatus, BookingType, DeliveryOption, VehicleAssignmentData, Transaction, TransactionType, PlatformActivity, PlatformActivityType, AllocatedBulkSpaceStatus } from '@/types';
+import type { Branch, Space, Client, AllocatedBulkSpace, ClientStatus, BookingStatus, BookingType, DeliveryOption, VehicleAssignmentData, Transaction, TransactionType, PlatformActivity, PlatformActivityType, AllocatedBulkSpaceStatus, Order, OrderStatus, ServiceType, Unit, UnitType, PaymentCycle } from '@/types';
 import { formatISO, subDays, addDays, subHours, addHours, parseISO, isBefore, addMonths as dateFnsAddMonths, startOfMonth, endOfMonth, isWithinInterval, isEqual, format, differenceInCalendarDays } from 'date-fns';
 
 export let mockBranches: Branch[] = [
@@ -1177,6 +1177,192 @@ recalculateBranchCapacities();
 
 export const getPlatformActivities = (): PlatformActivity[] => {
   return mockPlatformActivities;
+};
+
+// ─── Units (DocumentBox + StorageSpace per branch) ───────────────────────────
+
+export let mockUnits: Unit[] = [
+  // Zone A — Document Boxes (Sukhumvit)
+  { id:'unit-box-a01', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'BOX-A-001', unitType:'DocumentBox', floor:1, zone:'A', status:'Occupied', boxCapacity:1, monthlyRate:150, currentClientId:'client-1', currentClientName:'Alice Wonderland', currentOrderId:'ord-001', billingCycleEndDate:addDays(new Date(),75).toISOString(), floorPlanX:0,floorPlanY:0,floorPlanW:1,floorPlanH:1, createdAt:subDays(new Date(),90).toISOString() },
+  { id:'unit-box-a02', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'BOX-A-002', unitType:'DocumentBox', floor:1, zone:'A', status:'Occupied', boxCapacity:1, monthlyRate:150, currentClientId:'client-2', currentClientName:'Bob The Builder Inc.', billingCycleEndDate:addDays(new Date(),45).toISOString(), floorPlanX:1,floorPlanY:0,floorPlanW:1,floorPlanH:1, createdAt:subDays(new Date(),60).toISOString() },
+  { id:'unit-box-a03', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'BOX-A-003', unitType:'DocumentBox', floor:1, zone:'A', status:'Available', boxCapacity:1, monthlyRate:150, floorPlanX:2,floorPlanY:0,floorPlanW:1,floorPlanH:1, createdAt:subDays(new Date(),60).toISOString() },
+  { id:'unit-box-a04', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'BOX-A-004', unitType:'DocumentBox', floor:1, zone:'A', status:'Available', boxCapacity:1, monthlyRate:150, floorPlanX:3,floorPlanY:0,floorPlanW:1,floorPlanH:1, createdAt:subDays(new Date(),60).toISOString() },
+  { id:'unit-box-a05', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'BOX-A-005', unitType:'DocumentBox', floor:1, zone:'A', status:'Occupied', boxCapacity:1, monthlyRate:150, currentClientId:'client-3', currentClientName:'Charlie Brown', floorPlanX:0,floorPlanY:1,floorPlanW:1,floorPlanH:1, createdAt:subDays(new Date(),30).toISOString() },
+  { id:'unit-box-a06', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'BOX-A-006', unitType:'DocumentBox', floor:1, zone:'A', status:'Reserved', boxCapacity:1, monthlyRate:150, currentClientName:'Diana Prince', floorPlanX:1,floorPlanY:1,floorPlanW:1,floorPlanH:1, createdAt:subDays(new Date(),30).toISOString() },
+  // Zone B — Small Storage Spaces 2×2m (Sukhumvit)
+  { id:'unit-spc-b01', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'SPC-B-001', unitType:'StorageSpace', floor:1, zone:'B', status:'Occupied', widthM:2, lengthM:2, totalSqm:4, monthlyRate:3200, currentClientId:'client-1', currentClientName:'Alice Wonderland', currentOrderId:'ord-002', billingCycleEndDate:addDays(new Date(),30).toISOString(), floorPlanX:0,floorPlanY:0,floorPlanW:2,floorPlanH:2, createdAt:subDays(new Date(),120).toISOString() },
+  { id:'unit-spc-b02', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'SPC-B-002', unitType:'StorageSpace', floor:1, zone:'B', status:'Reserved', widthM:2, lengthM:2, totalSqm:4, monthlyRate:3200, currentClientName:'Bob The Builder Inc.', floorPlanX:2,floorPlanY:0,floorPlanW:2,floorPlanH:2, createdAt:subDays(new Date(),120).toISOString() },
+  { id:'unit-spc-b03', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'SPC-B-003', unitType:'StorageSpace', floor:1, zone:'B', status:'Available', widthM:2, lengthM:2, totalSqm:4, monthlyRate:3200, floorPlanX:4,floorPlanY:0,floorPlanW:2,floorPlanH:2, createdAt:subDays(new Date(),120).toISOString() },
+  // Zone C — Medium Storage Spaces 3×3m (Sukhumvit)
+  { id:'unit-spc-c01', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'SPC-C-001', unitType:'StorageSpace', floor:1, zone:'C', status:'AwaitingRenewal' as any, widthM:3, lengthM:3, totalSqm:9, monthlyRate:7200, currentClientId:'client-4', currentClientName:'Diana Prince', billingCycleEndDate:addDays(new Date(),5).toISOString(), floorPlanX:0,floorPlanY:0,floorPlanW:3,floorPlanH:3, createdAt:subDays(new Date(),180).toISOString() },
+  { id:'unit-spc-c02', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'SPC-C-002', unitType:'StorageSpace', floor:1, zone:'C', status:'Occupied', widthM:3, lengthM:3, totalSqm:9, monthlyRate:7200, currentClientId:'client-5', currentClientName:'Edward Nygma', floorPlanX:3,floorPlanY:0,floorPlanW:3,floorPlanH:3, createdAt:subDays(new Date(),90).toISOString() },
+  // Zone D — Large Storage Spaces 4×4m (Sukhumvit)
+  { id:'unit-spc-d01', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'SPC-D-001', unitType:'StorageSpace', floor:2, zone:'D', status:'Occupied', widthM:4, lengthM:4, totalSqm:16, monthlyRate:12800, currentClientId:'client-2', currentClientName:'Bob The Builder Inc.', floorPlanX:0,floorPlanY:0,floorPlanW:4,floorPlanH:4, createdAt:subDays(new Date(),200).toISOString() },
+  { id:'unit-spc-d02', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'SPC-D-002', unitType:'StorageSpace', floor:2, zone:'D', status:'Maintenance', widthM:4, lengthM:4, totalSqm:16, monthlyRate:12800, notes:'ซ่อมพื้น คาดว่าเสร็จ 20 Apr 2026', floorPlanX:4,floorPlanY:0,floorPlanW:4,floorPlanH:4, createdAt:subDays(new Date(),200).toISOString() },
+];
+
+export const getUnits = (branchId?: string): Unit[] => {
+  if (branchId) return mockUnits.filter(u => u.branchId === branchId);
+  return mockUnits;
+};
+
+export const getUnitsByType = (unitType: UnitType, branchId?: string): Unit[] => {
+  return getUnits(branchId).filter(u => u.unitType === unitType);
+};
+
+// ─── Orders (unified Storage + Delivery) ─────────────────────────────────────
+
+export let mockOrders: Order[] = [
+  {
+    id: 'ord-001',
+    serviceType: 'Storage',
+    storageSubType: 'DocumentBox',
+    status: 'Active',
+    clientId: 'client-1',
+    clientName: 'Alice Wonderland',
+    clientPhone: '081-234-5678',
+    clientEmail: 'alice@example.com',
+    clientLineId: '@alice_w',
+    serviceAddress: '123 Sukhumvit Soi 4, Wattana, Bangkok',
+    serviceFloor: '5',
+    hasElevator: true,
+    itemsDescription: 'กล่องเอกสาร บัญชี ปี 2020-2024',
+    itemCategories: ['เอกสาร'],
+    serviceDate: subDays(new Date(), 30).toISOString(),
+    storageDuration: '12 เดือน',
+    storageEndDate: addDays(new Date(), 335).toISOString(),
+    quantity: 10,
+    quantityUnit: 'กล่อง',
+    paymentCycle: 'Monthly',
+    monthlyRate: 1500,
+    firstMonthTotal: 1850,
+    branchId: 'branch-bkk-sukhumvit',
+    branchName: 'Widing Sukhumvit',
+    unitId: 'unit-box-a01',
+    unitIdentifier: 'BOX-A-001',
+    eContractStatus: 'Signed',
+    saleStaffName: 'สมชาย วงษ์',
+    createdAt: subDays(new Date(), 30).toISOString(),
+  },
+  {
+    id: 'ord-002',
+    serviceType: 'Storage',
+    storageSubType: 'StorageSpace',
+    status: 'Active',
+    clientId: 'client-1',
+    clientName: 'Alice Wonderland',
+    clientPhone: '081-234-5678',
+    clientEmail: 'alice@example.com',
+    serviceAddress: '123 Sukhumvit Soi 4, Wattana, Bangkok',
+    serviceFloor: '5',
+    hasElevator: true,
+    itemsDescription: 'เฟอร์นิเจอร์ โซฟา ตู้เสื้อผ้า เตียง',
+    itemCategories: ['เฟอร์นิเจอร์'],
+    serviceDate: subDays(new Date(), 45).toISOString(),
+    storageDuration: '6 เดือน',
+    storageEndDate: addDays(new Date(), 135).toISOString(),
+    quantity: 4,
+    quantityUnit: 'ตร.ม.',
+    paymentCycle: 'Monthly',
+    monthlyRate: 3200,
+    firstMonthTotal: 3550,
+    branchId: 'branch-bkk-sukhumvit',
+    branchName: 'Widing Sukhumvit',
+    unitId: 'unit-spc-b01',
+    unitIdentifier: 'SPC-B-001',
+    eContractStatus: 'Signed',
+    saleStaffName: 'สมชาย วงษ์',
+    createdAt: subDays(new Date(), 45).toISOString(),
+  },
+  {
+    id: 'ord-003',
+    serviceType: 'Delivery',
+    deliverySubType: 'PickupAndStore',
+    status: 'Pending',
+    clientName: 'วันชัย ประดิษฐ์',
+    clientPhone: '089-765-4321',
+    clientEmail: 'wanchai@email.com',
+    clientLineId: '@wanchai_p',
+    serviceAddress: '55 Sathorn Rd, Sathorn, Bangkok',
+    serviceFloor: '8',
+    hasElevator: true,
+    itemsDescription: 'เฟอร์นิเจอร์สำนักงาน โต๊ะ เก้าอี้ ชั้นวางของ',
+    itemCategories: ['เฟอร์นิเจอร์', 'อิเล็กทรอนิกส์'],
+    serviceDate: addDays(new Date(), 3).toISOString(),
+    storageDuration: '3 เดือน',
+    quantity: 12,
+    quantityUnit: 'ตร.ม.',
+    paymentCycle: 'Monthly',
+    monthlyRate: 9600,
+    branchId: 'branch-bkk-sukhumvit',
+    branchName: 'Widing Sukhumvit',
+    eContractStatus: 'Draft',
+    saleStaffName: 'นัตตาพร ดี',
+    createdAt: subDays(new Date(), 2).toISOString(),
+  },
+  {
+    id: 'ord-004',
+    serviceType: 'Storage',
+    storageSubType: 'DocumentBox',
+    status: 'Active',
+    clientId: 'client-2',
+    clientName: 'Bob The Builder Inc.',
+    clientPhone: '02-555-1234',
+    clientEmail: 'info@bobbuilder.com',
+    serviceAddress: '88 Silom Rd, Bang Rak, Bangkok',
+    serviceFloor: '1',
+    hasElevator: false,
+    itemsDescription: 'เอกสารสัญญา ใบเสร็จ บัญชี 2018-2025 จำนวน 80 กล่อง',
+    itemCategories: ['เอกสาร'],
+    serviceDate: subDays(new Date(), 90).toISOString(),
+    storageDuration: '12 เดือน',
+    storageEndDate: addDays(new Date(), 275).toISOString(),
+    quantity: 80,
+    quantityUnit: 'กล่อง',
+    paymentCycle: 'Annual',
+    monthlyRate: 12000,
+    firstMonthTotal: 129600,
+    branchId: 'branch-bkk-sukhumvit',
+    branchName: 'Widing Sukhumvit',
+    unitId: 'unit-box-a02',
+    unitIdentifier: 'BOX-A-002',
+    eContractStatus: 'Signed',
+    saleStaffName: 'สมชาย วงษ์',
+    commissionRate: 10,
+    createdAt: subDays(new Date(), 90).toISOString(),
+  },
+  {
+    id: 'ord-005',
+    serviceType: 'Delivery',
+    deliverySubType: 'ReturnDelivery',
+    status: 'Active',
+    clientId: 'client-3',
+    clientName: 'Charlie Brown',
+    clientPhone: '091-234-5678',
+    clientEmail: 'charlie@email.com',
+    serviceAddress: '77 Chatuchak, Bangkok',
+    serviceFloor: '3',
+    hasElevator: true,
+    itemsDescription: 'ส่งคืน: กล่องเอกสาร 5 กล่อง',
+    itemCategories: ['เอกสาร'],
+    serviceDate: addDays(new Date(), 7).toISOString(),
+    quantity: 5,
+    quantityUnit: 'กล่อง',
+    branchId: 'branch-bkk-sukhumvit',
+    branchName: 'Widing Sukhumvit',
+    eContractStatus: 'Sent',
+    saleStaffName: 'นัตตาพร ดี',
+    createdAt: subDays(new Date(), 5).toISOString(),
+  },
+];
+
+export const getOrders = (serviceType?: ServiceType): Order[] => {
+  if (serviceType) return mockOrders.filter(o => o.serviceType === serviceType);
+  return mockOrders;
+};
+
+export const getOrderById = (id: string): Order | undefined => {
+  return mockOrders.find(o => o.id === id);
 };
 
     

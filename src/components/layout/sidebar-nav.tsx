@@ -16,26 +16,33 @@ import {
   CalendarClock,
   Users,
   Settings,
-  Receipt, 
-  PackagePlus, 
-  Route, 
+  Receipt,
+  PackagePlus,
+  Route,
   CalendarDays,
-  CreditCard, 
-  ClipboardList, 
+  CreditCard,
+  ClipboardList,
   LogIn,
-  DollarSign, // Added for Partner Payouts
+  DollarSign,
+  ShoppingCart,    // Orders
+  Warehouse,       // Units
+  MapPin,          // Floor Plan
 } from "lucide-react";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/calendar", label: "Calendar", icon: CalendarDays },
-  { href: "/bookings", label: "Booking Management", icon: CalendarClock },
-  { href: "/flexible-allocations", label: "Flexible Allocations", icon: PackagePlus }, 
-  { href: "/delivery-planning", label: "Delivery Planning", icon: Route }, 
-  { href: "/clients", label: "Clients", icon: Users },
-  { href: "/transactions", label: "Transactions", icon: Receipt },
-  { href: "/branches", label: "Branches", icon: Building2 },
-  { href: "/branches/partner-payouts", label: "Partner Payouts", icon: DollarSign }, // New Item
+  { href: "/dashboard",        label: "Dashboard",          icon: LayoutDashboard },
+  // ── Core: Orders & Units (primary focus) ──
+  { href: "/orders",           label: "📋 Orders",           icon: ShoppingCart },
+  { href: "/units",            label: "📦 Unit Inventory",   icon: Warehouse },
+  // ── Clients & Branches ──
+  { href: "/clients",          label: "Clients",             icon: Users },
+  { href: "/branches",         label: "Branches",            icon: Building2 },
+  // ── Operations ──
+  { href: "/bookings",         label: "Bookings (Legacy)",   icon: CalendarClock },
+  { href: "/flexible-allocations", label: "Allocations",    icon: PackagePlus },
+  { href: "/delivery-planning",label: "Delivery Planning",   icon: Route },
+  { href: "/transactions",     label: "Transactions",        icon: Receipt },
+  { href: "/branches/partner-payouts", label: "Partner Payouts", icon: DollarSign },
 ];
 
 const devNavItems = [
