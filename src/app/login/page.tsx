@@ -1,8 +1,10 @@
 
+import { Suspense } from "react";
 import { CustomerLoginForm } from "@/components/forms/customer-login-form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { SpaceWiseIcon } from "@/components/icons";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   return (
@@ -21,7 +23,9 @@ export default function LoginPage() {
             <CardDescription>Log in to access your account.</CardDescription>
           </CardHeader>
           <CardContent>
-            <CustomerLoginForm />
+            <Suspense fallback={<div className="flex justify-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}>
+              <CustomerLoginForm />
+            </Suspense>
             <p className="mt-6 text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}
               <Link href="/register" className="font-medium text-primary hover:underline">

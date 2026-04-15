@@ -1175,4 +1175,8 @@ export let mockPlatformActivities: PlatformActivity[] = [
 // Initial recalculation after all data has been set up
 recalculateBranchCapacities();
 
+export const getPlatformActivities = (): PlatformActivity[] => {
+  return mockPlatformActivities;
+};
+
     

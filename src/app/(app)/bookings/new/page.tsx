@@ -1,8 +1,9 @@
 
+import { Suspense } from "react";
 import { StaffBookingForm } from "@/components/forms/staff-booking-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from 'next';
 import { mockClients, mockBranches } from "@/lib/data";
@@ -31,7 +32,9 @@ export default function StaffCreateBookingPage() {
           <CardDescription>Manually enter booking details for a client.</CardDescription>
         </CardHeader>
         <CardContent>
-          <StaffBookingForm clients={clients} branches={branches} />
+          <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}>
+            <StaffBookingForm clients={clients} branches={branches} />
+          </Suspense>
         </CardContent>
       </Card>
     </div>
