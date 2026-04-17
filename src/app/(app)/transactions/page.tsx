@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Receipt, FileClock, FileCheck2, FileX } from "lucide-react";
 import { TransactionTable } from "./components/transaction-table";
-import { mockTransactions } from "@/lib/data";
+import { getTransactions } from "@/lib/db";
 import type { Metadata } from 'next';
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function TransactionsPage() {
-  const transactions = mockTransactions; 
+  const transactions = await getTransactions();
 
   const totalTransactions = transactions.length;
   const pendingTransactions = transactions.filter(t => t.status === 'Pending').length;

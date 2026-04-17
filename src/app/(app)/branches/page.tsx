@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Building2, BarChart3, PieChart, ExternalLink } from "lucide-react"; // Added icons
 import { BranchTable } from "./components/branch-table";
-import { mockBranches } from "@/lib/data";
+import { getBranches } from "@/lib/db";
 import type { Metadata } from 'next';
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +18,7 @@ const parseCapacity = (capacityString?: string): number => {
 };
 
 export default async function BranchesPage() {
-  const branches = mockBranches;
+  const branches = await getBranches();
 
   const totalBranches = branches.length;
   const totalCapacity = branches.reduce((sum, branch) => sum + parseCapacity(branch.totalCapacity), 0);

@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Users, UserPlus, UserMinus, UserCheck, UserX } from "lucide-react";
 import { ClientTable } from "./components/client-table";
-import { mockClients, countClientsByStatus } from "@/lib/data";
+import { getClients, countClientsByStatus } from "@/lib/db";
 import type { Metadata } from 'next';
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,12 +12,13 @@ export const metadata: Metadata = {
 };
 
 export default async function ClientsPage() {
-  // In a real app, fetch clients
-  const clients = mockClients;
-  const prospectCount = countClientsByStatus('Prospect');
-  const activeClientCount = countClientsByStatus('Active');
-  const churnedClientCount = countClientsByStatus('Churned');
-  const completedReturnCount = countClientsByStatus('ReturnCompleted');
+  const [clients, prospectCount, activeClientCount, churnedClientCount, completedReturnCount] = await Promise.all([
+    getClients(),
+    countClientsByStatus('Prospect'),
+    countClientsByStatus('Active'),
+    countClientsByStatus('Churned'),
+    countClientsByStatus('ReturnCompleted'),
+  ]);
 
   const stats = [
     { title: "Prospects", value: prospectCount, icon: UserPlus, description: "Registered, no active storage" },

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Package, Truck, Clock, TrendingUp } from "lucide-react";
-import { getOrders } from "@/lib/data";
+import { getOrders } from "@/lib/db";
 import type { Order, OrderStatus, ServiceType } from "@/types";
 import type { Metadata } from "next";
 
@@ -25,8 +25,8 @@ const SERVICE_TYPE_STYLES: Record<ServiceType, { icon: React.ReactNode; label: s
   Delivery: { icon: <Truck className="h-3 w-3" />,   label: "Delivery", labelTH: "ขนส่ง" },
 };
 
-export default function OrdersPage() {
-  const orders = getOrders();
+export default async function OrdersPage() {
+  const orders = await getOrders();
 
   const stats = {
     total:    orders.length,

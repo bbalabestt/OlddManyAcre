@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, CalendarDays } from "lucide-react"; // Added CalendarDays icon
 import { BookingKanbanBoard } from "./components/booking-kanban-board";
 import { BookingListTable } from "./components/booking-list-table"; 
-import { mockBookings } from "@/lib/data";
+import { getBookings } from "@/lib/db";
 import type { Metadata } from 'next';
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,7 +18,7 @@ const UPCOMING_KANBAN_COLUMNS_ORDER: BookingStatus[] = ['Pending', 'Processing',
 const TODAY_KANBAN_COLUMNS_ORDER: BookingStatus[] = ['Confirmed', 'InTransit', 'AwaitingAllocation'];
 
 export default async function BookingsPage() {
-  const bookings = mockBookings; 
+  const bookings = await getBookings();
   const sevenDaysAgo = subDays(new Date(), 7);
 
   const upcomingBookingsCount = bookings.filter(b => {

@@ -5,7 +5,7 @@ import { AllocationsTable } from "./components/allocations-table";
 import { ExtendAllocationsTable } from "./components/extend-allocations-table"; 
 import { AwaitingRenewalAllocationsTable } from "./components/awaiting-renewal-allocations-table"; // New Import
 import { ReleasedAllocationsTable } from "./components/released-allocations-table"; // Re-import if needed
-import { getAllocatedBulkSpaces } from "@/lib/data";
+import { getAllocations } from "@/lib/db";
 import type { Metadata } from 'next';
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; 
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default async function FlexibleAllocationsPage() {
-  const allAllocations = getAllocatedBulkSpaces(); 
+  const allAllocations = await getAllocations();
   
   const currentAllocations = allAllocations.filter(
     a => a.status === 'Occupied' || a.status === 'Reserved'

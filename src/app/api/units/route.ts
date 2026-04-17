@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addUnit, getUnits } from "@/lib/data";
+import { getUnits, createUnit } from "@/lib/db";
 import type { Unit } from "@/types";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const branchId = searchParams.get("branchId") ?? undefined;
-  const units = getUnits(branchId);
+  const units = await getUnits(branchId);
   return NextResponse.json({ units });
 }
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       notes:          body.notes ?? undefined,
     };
 
-    const newUnit = addUnit(unitData);
+    const newUnit = await createUnit(unitData);
     return NextResponse.json({ unit: newUnit }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });

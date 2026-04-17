@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Users, DollarSign, Archive, PieChart } from "lucide-react"; 
-import { mockBranches, mockClients, getThisMonthIncome } from "@/lib/data"; 
+import { getBranches, getClients, getThisMonthIncome } from "@/lib/db";
 import { parseCapacityToNumber } from "@/lib/utils";
 import type { Metadata } from 'next';
 import Link from "next/link";
@@ -12,15 +12,19 @@ export const metadata: Metadata = {
   title: 'Dashboard',
 };
 
-export default function DashboardPage() {
-  const totalClients = mockClients.length;
-  const thisMonthIncome = getThisMonthIncome();
+export default async function DashboardPage() {
+  const [branches, clients, thisMonthIncome] = await Promise.all([
+    getBranches(),
+    getClients(),
+    getThisMonthIncome(),
+  ]);
+  const totalClients = clients.length;
 
   let sumTotalOccupiedCapacity = 0;
   let sumTotalCapacity = 0;
   let sumRemainingBulkCapacity = 0;
 
-  mockBranches.forEach(branch => {
+  branches.forEach(branch => {
     sumTotalOccupiedCapacity += parseCapacityToNumber(branch.occupiedCapacity);
     sumTotalCapacity += parseCapacityToNumber(branch.totalCapacity);
     sumRemainingBulkCapacity += parseCapacityToNumber(branch.remainingBulkCapacity);

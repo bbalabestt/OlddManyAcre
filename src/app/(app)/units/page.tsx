@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getUnits, mockBranches } from "@/lib/data";
+import { getUnits } from "@/lib/db";
+import { getBranches } from "@/lib/db";
 import { Plus, Package, Maximize2 } from "lucide-react";
 import type { Metadata } from "next";
 import type { Unit } from "@/types";
@@ -26,8 +27,8 @@ const STATUS_LABEL: Record<Unit["status"], string> = {
   AwaitingRenewal: "รอต่อสัญญา",
 };
 
-export default function UnitsPage() {
-  const units = getUnits();
+export default async function UnitsPage() {
+  const [units, branches] = await Promise.all([getUnits(), getBranches()]);
 
   const stats = {
     total:       units.length,
@@ -109,7 +110,7 @@ export default function UnitsPage() {
       {/* Branch floor-plan quick links */}
       <div className="flex flex-wrap gap-2 items-center">
         <span className="text-sm text-muted-foreground mr-1">แผนผัง 2D ต่อสาขา:</span>
-        {mockBranches.map(b => (
+        {branches.map(b => (
           <Button key={b.id} variant="outline" size="sm" asChild>
             <Link href={`/units/floor-plan/${b.id}`}>{b.name.replace(/ \(.*\)/, "")}</Link>
           </Button>
