@@ -3,103 +3,141 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
-import { getUnits } from "@/lib/data";
+import { getUnits, mockBranches } from "@/lib/data";
 import type { Unit } from "@/types";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Floor Plan — Widing" };
 
 const STATUS_COLOR: Record<Unit["status"], { bg: string; border: string; text: string; dot: string }> = {
-  Available:   { bg:"bg-green-100",  border:"border-green-400", text:"text-green-900",  dot:"bg-green-500"  },
-  Occupied:    { bg:"bg-gray-900",   border:"border-gray-700",  text:"text-white",       dot:"bg-green-400"  },
-  Reserved:    { bg:"bg-blue-100",   border:"border-blue-400",  text:"text-blue-900",   dot:"bg-blue-500"   },
-  Maintenance: { bg:"bg-red-100",    border:"border-red-400",   text:"text-red-900",    dot:"bg-red-500"    },
+  Available:       { bg:"bg-green-100",  border:"border-green-400",  text:"text-green-900",  dot:"bg-green-500"  },
+  Occupied:        { bg:"bg-gray-900",   border:"border-gray-700",   text:"text-white",       dot:"bg-green-400"  },
+  Reserved:        { bg:"bg-blue-100",   border:"border-blue-400",   text:"text-blue-900",   dot:"bg-blue-500"   },
+  Maintenance:     { bg:"bg-red-100",    border:"border-red-400",    text:"text-red-900",    dot:"bg-red-500"    },
+  AwaitingRenewal: { bg:"bg-yellow-100", border:"border-yellow-400", text:"text-yellow-900", dot:"bg-yellow-500" },
 };
 
 const STATUS_LABEL_TH: Record<Unit["status"], string> = {
-  Available:   "ว่าง",
-  Occupied:    "มีผู้เช่า",
-  Reserved:    "สำรอง",
-  Maintenance: "ซ่อมบำรุง",
+  Available:       "ว่าง",
+  Occupied:        "มีผู้เช่า",
+  Reserved:        "สำรอง",
+  Maintenance:     "ซ่อมบำรุง",
+  AwaitingRenewal: "รอต่อสัญญา",
 };
 
 function FloorPlanCell({ unit }: { unit: Unit }) {
   const s = STATUS_COLOR[unit.status];
-  const isLarge = unit.totalSqm && unit.totalSqm >= 9;
+  const isLarge  = unit.totalSqm && unit.totalSqm >= 9;
   const isMedium = unit.totalSqm && unit.totalSqm >= 4 && unit.totalSqm < 9;
 
   return (
-    <div
-      className={`relative rounded-lg border-2 flex flex-col justify-between p-2 transition-all hover:shadow-md hover:scale-[1.02] cursor-pointer
-        ${s.bg} ${s.border}
-        ${isLarge ? "min-h-[120px] min-w-[120px]" : isMedium ? "min-h-[90px] min-w-[90px]" : "min-h-[60px] min-w-[60px]"}
-      `}
-    >
-      <div>
-        <p className={`font-bold text-[11px] leading-tight ${s.text}`}>{unit.unitIdentifier}</p>
-        {unit.totalSqm && (
-          <p className={`text-[10px] ${s.text} opacity-80`}>{unit.totalSqm} m²</p>
+    <Link href={`/units/${unit.id}`}>
+      <div
+        className={`relative rounded-lg border-2 flex flex-col justify-between p-2 transition-all hover:shadow-lg hover:scale-[1.04] cursor-pointer
+          ${s.bg} ${s.border}
+          ${isLarge ? "min-h-[120px] min-w-[120px]" : isMedium ? "min-h-[90px] min-w-[90px]" : "min-h-[60px] min-w-[60px]"}
+        `}
+      >
+        <div>
+          <p className={`font-bold text-[11px] leading-tight ${s.text}`}>{unit.unitIdentifier}</p>
+          {unit.totalSqm && (
+            <p className={`text-[10px] ${s.text} opacity-80`}>{unit.totalSqm} m²</p>
+          )}
+        </div>
+        {unit.currentClientName && (
+          <p className={`text-[9px] font-medium truncate ${s.text} opacity-90`}>{unit.currentClientName}</p>
         )}
+        <div className="flex items-center gap-1 mt-1">
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${s.dot}`} />
+          <span className={`text-[9px] ${s.text} opacity-80`}>{STATUS_LABEL_TH[unit.status]}</span>
+        </div>
       </div>
-      {unit.currentClientName && (
-        <p className={`text-[9px] font-medium truncate ${s.text} opacity-90`}>{unit.currentClientName}</p>
-      )}
-      <div className="flex items-center gap-1 mt-1">
-        <span className={`w-2 h-2 rounded-full ${s.dot}`} />
-        <span className={`text-[9px] ${s.text} opacity-80`}>{STATUS_LABEL_TH[unit.status]}</span>
-      </div>
-    </div>
+    </Link>
   );
 }
 
 export default function FloorPlanPage({ params }: { params: { branchId: string } }) {
   const allUnits = getUnits(params.branchId);
-  const floors = [...new Set(allUnits.map(u => u.floor))].sort();
-  const zones  = [...new Set(allUnits.map(u => u.zone))].sort();
+  const floors   = [...new Set(allUnits.map(u => u.floor))].sort();
+  const zones    = [...new Set(allUnits.map(u => u.zone))].sort();
 
-  const BRANCH_NAMES: Record<string, string> = {
-    "branch-bkk-sukhumvit": "Widing Sukhumvit Micro-Hub",
-    "branch-nb-pakkret":    "Nonthaburi Express Pods",
-    "branch-cm-nimman":     "Chiang Mai Nimman Vault",
-    "branch-bkk-sathorn":   "Sathorn City Store",
-  };
-  const branchName = BRANCH_NAMES[params.branchId] ?? "Branch";
+  const branch     = mockBranches.find(b => b.id === params.branchId);
+  const branchName = branch?.name ?? "Branch";
 
   const stats = {
-    total:       allUnits.length,
-    available:   allUnits.filter(u => u.status === "Available").length,
-    occupied:    allUnits.filter(u => u.status === "Occupied").length,
-    reserved:    allUnits.filter(u => u.status === "Reserved").length,
-    maintenance: allUnits.filter(u => u.status === "Maintenance").length,
+    total:           allUnits.length,
+    available:       allUnits.filter(u => u.status === "Available").length,
+    occupied:        allUnits.filter(u => u.status === "Occupied").length,
+    reserved:        allUnits.filter(u => u.status === "Reserved").length,
+    maintenance:     allUnits.filter(u => u.status === "Maintenance").length,
+    awaitingRenewal: allUnits.filter(u => u.status === "AwaitingRenewal").length,
   };
 
   return (
     <div className="flex flex-col gap-4">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/units"><ArrowLeft className="mr-2 h-4 w-4" /> กลับ</Link>
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">แผนผัง 2D — {branchName}</h1>
-          <p className="text-sm text-muted-foreground">Floor Plan View · {allUnits.length} units across {floors.length} floor(s)</p>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/units"><ArrowLeft className="mr-2 h-4 w-4" /> กลับ</Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">แผนผัง 2D — {branchName}</h1>
+            <p className="text-sm text-muted-foreground">
+              Floor Plan View · {allUnits.length} units across {floors.length} floor(s)
+            </p>
+          </div>
+        </div>
+
+        {/* Branch switcher + add button */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {mockBranches.map(b => (
+            <Button
+              key={b.id}
+              variant={b.id === params.branchId ? "default" : "outline"}
+              size="sm"
+              asChild
+            >
+              <Link href={`/units/floor-plan/${b.id}`}>{b.name.replace(/ \(.*\)/, "")}</Link>
+            </Button>
+          ))}
+          <Button size="sm" asChild>
+            <Link href="/units/new">+ เพิ่มยูนิต</Link>
+          </Button>
         </div>
       </div>
 
       {/* Legend + stats */}
       <div className="flex flex-wrap gap-3 items-center">
-        {(Object.keys(STATUS_COLOR) as Unit["status"][]).map(s => (
-          <div key={s} className="flex items-center gap-1.5 text-xs">
-            <span className={`w-3 h-3 rounded-sm border ${STATUS_COLOR[s].bg} ${STATUS_COLOR[s].border}`} />
-            <span className="font-medium">{STATUS_LABEL_TH[s]}</span>
-            <span className="text-muted-foreground">
-              ({s === "Available" ? stats.available : s === "Occupied" ? stats.occupied : s === "Reserved" ? stats.reserved : stats.maintenance})
-            </span>
-          </div>
-        ))}
+        {(Object.keys(STATUS_COLOR) as Unit["status"][]).map(s => {
+          const count =
+            s === "Available"       ? stats.available :
+            s === "Occupied"        ? stats.occupied :
+            s === "Reserved"        ? stats.reserved :
+            s === "Maintenance"     ? stats.maintenance :
+            stats.awaitingRenewal;
+          return (
+            <div key={s} className="flex items-center gap-1.5 text-xs">
+              <span className={`w-3 h-3 rounded-sm border ${STATUS_COLOR[s].bg} ${STATUS_COLOR[s].border}`} />
+              <span className="font-medium">{STATUS_LABEL_TH[s]}</span>
+              <span className="text-muted-foreground">({count})</span>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Floor tabs */}
+      {/* Empty state */}
+      {allUnits.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-4">
+          <p className="text-lg font-medium">ยังไม่มียูนิตในสาขานี้</p>
+          <p className="text-sm">No units found for this branch.</p>
+          <Button asChild>
+            <Link href="/units/new">+ เพิ่มยูนิตแรก</Link>
+          </Button>
+        </div>
+      )}
+
+      {/* Floor sections */}
       {floors.map(floor => (
         <Card key={floor} className="shadow-sm">
           <CardHeader className="pb-3">
@@ -111,12 +149,10 @@ export default function FloorPlanPage({ params }: { params: { branchId: string }
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Corridor label */}
             <div className="text-center text-xs text-muted-foreground mb-4 py-1 bg-muted rounded-md">
               ← ทางเข้า / ENTRANCE →
             </div>
 
-            {/* Zone grid */}
             <div className="space-y-6">
               {zones.map(zone => {
                 const zoneUnits = allUnits.filter(u => u.floor === floor && u.zone === zone);
@@ -138,7 +174,6 @@ export default function FloorPlanPage({ params }: { params: { branchId: string }
                       </span>
                     </div>
 
-                    {/* Document boxes — compact grid */}
                     {docBoxes.length > 0 && (
                       <div className="mb-3">
                         <p className="text-[10px] text-muted-foreground mb-2 uppercase tracking-wide">
@@ -150,7 +185,6 @@ export default function FloorPlanPage({ params }: { params: { branchId: string }
                       </div>
                     )}
 
-                    {/* Storage spaces — larger cells */}
                     {spaces.length > 0 && (
                       <div>
                         <p className="text-[10px] text-muted-foreground mb-2 uppercase tracking-wide">
@@ -162,8 +196,7 @@ export default function FloorPlanPage({ params }: { params: { branchId: string }
                       </div>
                     )}
 
-                    {/* Corridor between zones */}
-                    <div className="mt-4 h-px bg-dashed border-t border-dashed border-muted-foreground/30" />
+                    <div className="mt-4 border-t border-dashed border-muted-foreground/30" />
                     <p className="text-center text-[10px] text-muted-foreground mt-1">— ทางเดิน / CORRIDOR —</p>
                   </div>
                 );

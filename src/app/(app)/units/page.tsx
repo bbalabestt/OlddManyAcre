@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getUnits } from "@/lib/data";
+import { getUnits, mockBranches } from "@/lib/data";
 import { Plus, Package, Maximize2 } from "lucide-react";
 import type { Metadata } from "next";
 import type { Unit } from "@/types";
@@ -11,17 +11,19 @@ import type { Unit } from "@/types";
 export const metadata: Metadata = { title: "Units — Widing" };
 
 const STATUS_STYLE: Record<Unit["status"], string> = {
-  Available:   "bg-green-100 text-green-800 border-green-200",
-  Occupied:    "bg-gray-900 text-white border-gray-800",
-  Reserved:    "bg-blue-100 text-blue-800 border-blue-200",
-  Maintenance: "bg-red-100 text-red-800 border-red-200",
+  Available:       "bg-green-100 text-green-800 border-green-200",
+  Occupied:        "bg-gray-900 text-white border-gray-800",
+  Reserved:        "bg-blue-100 text-blue-800 border-blue-200",
+  Maintenance:     "bg-red-100 text-red-800 border-red-200",
+  AwaitingRenewal: "bg-yellow-100 text-yellow-800 border-yellow-200",
 };
 
 const STATUS_LABEL: Record<Unit["status"], string> = {
-  Available:   "ว่าง",
-  Occupied:    "มีผู้เช่า",
-  Reserved:    "สำรอง",
-  Maintenance: "ซ่อมบำรุง",
+  Available:       "ว่าง",
+  Occupied:        "มีผู้เช่า",
+  Reserved:        "สำรอง",
+  Maintenance:     "ซ่อมบำรุง",
+  AwaitingRenewal: "รอต่อสัญญา",
 };
 
 export default function UnitsPage() {
@@ -38,13 +40,6 @@ export default function UnitsPage() {
     revenue:     units.filter(u => u.status === "Occupied").reduce((s, u) => s + u.monthlyRate, 0),
   };
 
-  const BRANCHES = [
-    { id: "branch-bkk-sukhumvit", name: "Widing Sukhumvit" },
-    { id: "branch-nb-pakkret",    name: "Nonthaburi Express" },
-    { id: "branch-cm-nimman",     name: "Chiang Mai Nimman" },
-    { id: "branch-bkk-sathorn",   name: "Sathorn City" },
-  ];
-
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -59,8 +54,10 @@ export default function UnitsPage() {
               <Maximize2 className="mr-2 h-4 w-4" /> แผนผัง 2D
             </Link>
           </Button>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> เพิ่มยูนิต
+          <Button asChild>
+            <Link href="/units/new">
+              <Plus className="mr-2 h-4 w-4" /> เพิ่มยูนิต
+            </Link>
           </Button>
         </div>
       </div>
@@ -109,12 +106,22 @@ export default function UnitsPage() {
         </Card>
       </div>
 
+      {/* Branch floor-plan quick links */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <span className="text-sm text-muted-foreground mr-1">แผนผัง 2D ต่อสาขา:</span>
+        {mockBranches.map(b => (
+          <Button key={b.id} variant="outline" size="sm" asChild>
+            <Link href={`/units/floor-plan/${b.id}`}>{b.name.replace(/ \(.*\)/, "")}</Link>
+          </Button>
+        ))}
+      </div>
+
       {/* Units table */}
       <Card>
         <CardHeader>
           <CardTitle>รายการยูนิตทั้งหมด</CardTitle>
           <CardDescription>
-            สาขา Sukhumvit · {units.length} ยูนิต ·{" "}
+            {units.length} ยูนิต ทุกสาขา ·{" "}
             <Link href="/units/floor-plan/branch-bkk-sukhumvit" className="text-primary underline">ดูแผนผัง 2D →</Link>
           </CardDescription>
         </CardHeader>
@@ -164,7 +171,9 @@ export default function UnitsPage() {
                         : "—"}
                     </td>
                     <td className="px-4 py-3">
-                      <Button variant="ghost" size="sm">จัดการ</Button>
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link href={`/units/${unit.id}`}>จัดการ</Link>
+                      </Button>
                     </td>
                   </tr>
                 ))}

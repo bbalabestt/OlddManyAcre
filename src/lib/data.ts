@@ -1194,7 +1194,7 @@ export let mockUnits: Unit[] = [
   { id:'unit-spc-b02', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'SPC-B-002', unitType:'StorageSpace', floor:1, zone:'B', status:'Reserved', widthM:2, lengthM:2, totalSqm:4, monthlyRate:3200, currentClientName:'Bob The Builder Inc.', floorPlanX:2,floorPlanY:0,floorPlanW:2,floorPlanH:2, createdAt:subDays(new Date(),120).toISOString() },
   { id:'unit-spc-b03', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'SPC-B-003', unitType:'StorageSpace', floor:1, zone:'B', status:'Available', widthM:2, lengthM:2, totalSqm:4, monthlyRate:3200, floorPlanX:4,floorPlanY:0,floorPlanW:2,floorPlanH:2, createdAt:subDays(new Date(),120).toISOString() },
   // Zone C — Medium Storage Spaces 3×3m (Sukhumvit)
-  { id:'unit-spc-c01', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'SPC-C-001', unitType:'StorageSpace', floor:1, zone:'C', status:'AwaitingRenewal' as any, widthM:3, lengthM:3, totalSqm:9, monthlyRate:7200, currentClientId:'client-4', currentClientName:'Diana Prince', billingCycleEndDate:addDays(new Date(),5).toISOString(), floorPlanX:0,floorPlanY:0,floorPlanW:3,floorPlanH:3, createdAt:subDays(new Date(),180).toISOString() },
+  { id:'unit-spc-c01', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'SPC-C-001', unitType:'StorageSpace', floor:1, zone:'C', status:'AwaitingRenewal', widthM:3, lengthM:3, totalSqm:9, monthlyRate:7200, currentClientId:'client-4', currentClientName:'Diana Prince', billingCycleEndDate:addDays(new Date(),5).toISOString(), floorPlanX:0,floorPlanY:0,floorPlanW:3,floorPlanH:3, createdAt:subDays(new Date(),180).toISOString() },
   { id:'unit-spc-c02', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'SPC-C-002', unitType:'StorageSpace', floor:1, zone:'C', status:'Occupied', widthM:3, lengthM:3, totalSqm:9, monthlyRate:7200, currentClientId:'client-5', currentClientName:'Edward Nygma', floorPlanX:3,floorPlanY:0,floorPlanW:3,floorPlanH:3, createdAt:subDays(new Date(),90).toISOString() },
   // Zone D — Large Storage Spaces 4×4m (Sukhumvit)
   { id:'unit-spc-d01', branchId:'branch-bkk-sukhumvit', branchName:'Widing Sukhumvit', unitIdentifier:'SPC-D-001', unitType:'StorageSpace', floor:2, zone:'D', status:'Occupied', widthM:4, lengthM:4, totalSqm:16, monthlyRate:12800, currentClientId:'client-2', currentClientName:'Bob The Builder Inc.', floorPlanX:0,floorPlanY:0,floorPlanW:4,floorPlanH:4, createdAt:subDays(new Date(),200).toISOString() },
@@ -1208,6 +1208,26 @@ export const getUnits = (branchId?: string): Unit[] => {
 
 export const getUnitsByType = (unitType: UnitType, branchId?: string): Unit[] => {
   return getUnits(branchId).filter(u => u.unitType === unitType);
+};
+
+export const getUnitById = (id: string): Unit | undefined => {
+  return mockUnits.find(u => u.id === id);
+};
+
+export const addUnit = (data: Omit<Unit, 'id' | 'createdAt'>): Unit => {
+  const newUnit: Unit = {
+    ...data,
+    id: `unit-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+  mockUnits.push(newUnit);
+  return newUnit;
+};
+
+export const updateUnitStatus = (id: string, status: Unit['status']): Unit | undefined => {
+  const unit = mockUnits.find(u => u.id === id);
+  if (unit) unit.status = status;
+  return unit;
 };
 
 // ─── Orders (unified Storage + Delivery) ─────────────────────────────────────

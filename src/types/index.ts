@@ -315,7 +315,7 @@ export interface Unit {
   unitType: UnitType;
   floor: number;
   zone: string;                 // e.g. 'A', 'B', 'C', 'D'
-  status: 'Available' | 'Occupied' | 'Reserved' | 'Maintenance';
+  status: 'Available' | 'Occupied' | 'Reserved' | 'Maintenance' | 'AwaitingRenewal';
 
   // For StorageSpace
   widthM?: number;
